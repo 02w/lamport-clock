@@ -166,20 +166,22 @@ func (p *Process) checkOwnership() {
 
 	fmt.Printf("%d: PID %d has a pending request\n", p.CurrentTime, p.ID)
 
-	ReceivedFromAll := true
-	for Proc, LastRecv := range p.RecvTime {
-		if Proc == p.ID {
+	isRecvFromAll := true
+	for pid, lastRecv := range p.RecvTime {
+		if pid == p.ID {
 			continue
 		}
 		// If Pi ≺ Pj , then Pi need only have received a message timestamped ≥ Tm from Pj .
-		if p.ID < Proc && LastRecv < request.Timestamp {
-			ReceivedFromAll = false
+		if p.ID < pid && lastRecv < request.Timestamp {
+			isRecvFromAll = false
+			break
 		}
-		if p.ID > Proc && LastRecv <= request.Timestamp {
-			ReceivedFromAll = false
+		if p.ID > pid && lastRecv <= request.Timestamp {
+			isRecvFromAll = false
+			break
 		}
 	}
-	if ReceivedFromAll {
+	if isRecvFromAll {
 		fmt.Printf("%d: PID %d has the resource\n", p.CurrentTime, p.ID)
 	} else {
 		fmt.Printf("%d: PID %d hasn't heard from all peers\n", p.CurrentTime, p.ID)
@@ -200,9 +202,6 @@ func main() {
 		if _, err := fmt.Scanln(&command, &pid); err != nil {
 			log.Fatal(err)
 		}
-		if command == "exit" {
-			return
-		}
 		i, err := strconv.Atoi(pid)
 		if err != nil {
 			log.Fatal(err)
@@ -216,7 +215,7 @@ func main() {
 			for id := ProcNum - 1; id >= 0; id-- {
 				procs[id].RequestResource()
 			}
-			time.Sleep(5 * time.Second)
+			time.Sleep(4 * time.Second)
 			for id := 0; id <= i; id++ {
 				procs[id].ReleaseResource()
 			}

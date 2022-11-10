@@ -83,10 +83,13 @@ func (p *Process) Start() {
 		r := <-p.In
 		time.Sleep(time.Duration(100+rand.Intn(900)) * time.Millisecond)
 
-		p.RecvTime[r.Process] = r.Timestamp
+		if p.RecvTime[r.Process] < r.Timestamp {
+			p.RecvTime[r.Process] = r.Timestamp
+		}
 		if r.Timestamp > p.CurrentTime {
 			p.CurrentTime = r.Timestamp
 		}
+		p.time()
 
 		switch r.Type {
 		case Rel:
